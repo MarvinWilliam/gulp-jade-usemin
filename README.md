@@ -24,6 +24,7 @@ var rev = require('gulp-rev');
 gulp.task('usemin', function() {
   gulp.src('./*.jade')
     .pipe(usemin({
+      searchPath:['.sass','public'],
       css: [minifyCss(), 'concat'],
       html: [minifyHtml({empty: true})],
       js: [uglify(), rev()]

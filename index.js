@@ -61,7 +61,7 @@ module.exports = function (options) {
                 if (options.searchPath) {
                     var _filePath = [].concat(options.searchPath)
                                       .map(function (_path) {
-                                          return path.resolve(path.resolve(path.join(_path, b)));
+                                          return path.resolve(path.resolve(path.join(options.path || '.', _path, b)));
                                       })
                                       .filter(function (_path) {
                                           return fs.existsSync(_path);
