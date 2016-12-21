@@ -7,7 +7,7 @@ var through = require('through2');
 var gutil = require('gulp-util');
 var glob = require('glob');
 
-module.exports = function(options) {
+module.exports = function (options) {
     options = options || {};
     var startReg = /\/\/-\s*build:(\w+)(?:\(([^\)]+?)\))?\s+(\/?([^\s]+?))?\s*$/gim;
     var endReg = /\/\/-\s*endbuild\s*$/gim;
@@ -31,8 +31,9 @@ module.exports = function(options) {
         var filePath = path.join(path.relative(basePath, mainPath), name);
         var isStatic = name.split('.').pop() === 'js' || name.split('.').pop() === 'css';
 
-        if (isStatic)
+        if (isStatic) {
             filePath = name;
+        }
 
         return new gutil.File({
             path: filePath,
@@ -54,11 +55,25 @@ module.exports = function(options) {
             .replace(startCondReg, '')
             .replace(endCondReg, '')
             .replace(/<!--(?:(?:.|\r|\n)*?)-->/gim, '')
-            .replace(reg, function(a, b) {
+            .replace(reg, function (a, b) {
                 var filePath = path.resolve(path.join(alternatePath || options.path || mainPath, b));
 
-                if (options.assetsDir)
+                if (options.searchPath) {
+                    var _filePath = [].concat(options.searchPath)
+                                      .map(function (_path) {
+                                          return path.resolve(path.resolve(path.join(options.path || '.', _path, b)));
+                                      })
+                                      .filter(function (_path) {
+                                          return fs.existsSync(_path);
+                                      });
+                    if (_filePath.length > 0) {
+                        filePath = _filePath[0];
+                    }
+                }
+
+                if (options.assetsDir) {
                     filePath = path.resolve(path.join(options.assetsDir, path.relative(basePath, filePath)));
+                }
 
                 paths.push(filePath);
             });
@@ -85,7 +100,7 @@ module.exports = function(options) {
     function concat(files, name) {
         var buffer = [];
 
-        files.forEach(function(file) {
+        files.forEach(function (file) {
             buffer.push(String(file.contents));
         });
 
@@ -105,24 +120,26 @@ module.exports = function(options) {
             var stream = tasks[index];
 
             stream.on('data', writeNewFile);
-            stream.on('end', function() {
+            stream.on('end', function () {
                 stream.removeListener('data', writeNewFile);
             });
-            files.forEach(function(file) {
+            files.forEach(function (file) {
                 stream.write(file);
             });
         }
 
-        if (tasks[++index])
+        if (tasks[++index]) {
             processTask(index, tasks, name, newFiles, callback);
-        else
+        } else {
             newFiles.forEach(callback);
+        }
     }
 
     function process(name, files, pipelineId, callback) {
         var tasks = options[pipelineId] || [];
-        if (tasks.indexOf('concat') === -1)
+        if (tasks.indexOf('concat') === -1) {
             tasks.unshift('concat');
+        }
 
         processTask(0, tasks, name, files, callback);
     }
@@ -150,19 +167,21 @@ module.exports = function(options) {
         function jsRegPush(name, file) {
             push(file);
             name = options.outputRelativePath ? path.join(options.outputRelativePath, name) : name;
-            if (path.extname(file.path) === '.js')
+            if (path.extname(file.path) === '.js') {
                 jade.push('script(' + renderAttributes(section[5], name.replace(path.basename(name), path.basename(file.path))) + ' )');
+            }
         }
 
         function cssRegPush(name, file) {
             push(file);
             name = options.outputRelativePath ? path.join(options.outputRelativePath, name) : name;
-            if (path.extname(file.path) === '.css')
+            if (path.extname(file.path) === '.css') {
                 jade.push('link(' + renderAttributes(section[5], name.replace(path.basename(name), path.basename(file.path))) + ' )');
+            }
         }
 
         function patternReplace(pattern) {
-            sections[i].replace(pattern, function(match, src) {
+            sections[i].replace(pattern, function (match, src) {
                 var masked = src.replace(path.extname(src), '.*' + path.extname(src));
                 if (options.assetsDir) {
                     var file = finder.from(options.assetsDir).findFirst().findFiles(masked);
@@ -183,8 +202,9 @@ module.exports = function(options) {
 
                 var startCondLine = section[5].match(startCondReg);
                 var endCondLine = section[5].match(endCondReg);
-                if (startCondLine && endCondLine)
+                if (startCondLine && endCondLine) {
                     jade.push(startCondLine[0]);
+                }
 
                 if (section[1] !== 'remove') {
                     if (getBlockType(section[5]) === 'js') {
@@ -198,21 +218,20 @@ module.exports = function(options) {
                     jade.push(endCondLine[0]);
                 }
             } else {
-                patterns.forEach(patternReplace)
-
+                patterns.forEach(patternReplace);
                 //sections[i] = sections[i].replace(/(append|prepend) scripts/gi, 'block scripts');
                 //sections[i] = sections[i].replace(/(append|prepend) stylesheets/gi, 'block stylesheets');
                 jade.push(sections[i]);
             }
         }
 
-        process(mainName, [createFile(mainName, jade.join(''))], 'jade', function(file) {
+        process(mainName, [createFile(mainName, jade.join(''))], 'jade', function (file) {
             push(file);
             callback();
         });
     }
 
-    return through.obj(function(file, enc, callback) {
+    return through.obj(function (file, enc, callback) {
         if (file.isNull()) {
             this.push(file); // Do nothing if no contents
             callback();
