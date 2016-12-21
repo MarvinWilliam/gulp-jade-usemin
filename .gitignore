@@ -2,6 +2,9 @@
 logs
 *.log
 
+test
+gulpfile.js
+
 # Runtime data
 pids
 *.pid

@@ -33,5 +33,9 @@
     "glob": "^4.0.5",
     "gulp-util": "^3.0.0",
     "through2": "^0.6.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2"
   }
 }
