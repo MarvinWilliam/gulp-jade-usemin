@@ -236,7 +236,8 @@ module.exports = function (options) {
             this.push(file); // Do nothing if no contents
             callback();
         } else if (file.isStream()) {
-            this.emit('error', new gutil.PluginError('gulp-jade-usemin', 'Streams are not supported!'));
+            // this.emit('error', new gutil.PluginError('gulp-jade-usemin', 'Streams are not supported!'));
+            console.error('gulp-jade-usemin' + ' Streams are not supported!');
             callback();
         } else {
             basePath = file.base;
